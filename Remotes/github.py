@@ -159,7 +159,7 @@ class Git:
         if not self.Repo:
             self.clone(self.name)
 
-        return self.local_builder.build(self.name)
+        return PathBuilder(self.path).build(self.name)
 
     def build_from_local(self, path):
         self.path = path
@@ -168,22 +168,22 @@ class Git:
         return self.build()
 
     def get_type_directories(self, template_dir):
-        return self.local_builder.get_type_directories(Path(template_dir))
+        return PathBuilder(self.path)._get_type_directories(Path(template_dir))
 
     def get_first_real_dir(self, template_dirs):
-        return self.local_builder.get_first_real_dir(Path(template_dirs))
+        return PathBuilder(self.path)._get_first_real_dir([ Path(d) for d in template_dirs ])
 
     def get_snippets_in_dir(self, fp):
-        return self.local_builder.get_snippets_in_dir(Path(fp))
+        return PathBuilder(self.path)._get_snippets_in_dir(Path(fp))
 
     def snippets_from_metafile(self, meta_file):
-        return self.local_builder.snippets_from_metafile(Path(meta_file))
+        return PathBuilder(self.path)._snippets_from_metafile(Path(meta_file))
 
     def validate_snippet_meta(self, snippet_def, rel_dir):
-        return self.local_builder.validate_snippet_meta(snippet_def, Path(rel_dir))
+        return PathBuilder(self.path)._validate_snippet_meta(snippet_def, Path(rel_dir))
 
     def is_snippet_dir(self, fp):
-        return self.local_builder.is_snippet_dir(Path(fp))
+        return PathBuilder(self.path)._is_snippet_dir(Path(fp))
 
 def check_git_exists():
     return shutil.which("git")

@@ -38,14 +38,14 @@ class PathBuilder:
         # Populated with every snippet from SKILLET_TYPE/SNIPPET_DIR/
         # For a SKILLET_TYPE directory to be complete, it MUST contain a meta file for each SNIPPET_DIR
 
-        template_dir = self.get_first_real_dir(template_dirs)
-        skillet_types = self.get_type_directories(template_dir)
+        template_dir = self._get_first_real_dir(template_dirs)
+        skillet_types = self._get_type_directories(template_dir)
         sc = SkilletCollection(name)
 
         # This splits all the snippet directories into SnippetStack instances.
         # It uses the metadata 'type' to then add them to the correct skillet (usually 'panosxml' or 'panorama')
         for name, fp in skillet_types.items():
-            snippet_stacks = self.get_snippets_in_dir(fp)
+            snippet_stacks = self._get_snippets_in_dir(fp)
             for ss_name, ss in snippet_stacks.items():
                 t = ss.metadata['type']
                 sk = sc.new_skillet(t, t, ".*")
@@ -53,7 +53,7 @@ class PathBuilder:
 
         return sc
 
-    def get_type_directories(self, template_dir):
+    def _get_type_directories(self, template_dir):
         skillet_types = {}
         for directory in template_dir.iterdir():
             if not directory.is_file():
@@ -61,12 +61,12 @@ class PathBuilder:
                 if directory.name in ['panos', 'panorama']:
                     skillet_types[directory] = directory
                 # Otherwise, if the directory is a snippet directory default to PANOS
-                elif self.is_snippet_dir(directory):
+                elif self._is_snippet_dir(directory):
                     skillet_types['panos'] = template_dir
 
         return skillet_types
 
-    def get_first_real_dir(self, template_dirs):
+    def _get_first_real_dir(self, template_dirs):
         """
         Given a list of directories, return the first directory that exists in the system
         :param template_dirs (list): list of directories.
@@ -76,12 +76,12 @@ class PathBuilder:
             if template_dir.is_dir():
                 return template_dir
 
-    def get_snippets_in_dir(self, fp : Path):
+    def _get_snippets_in_dir(self, fp : Path):
         snippet_dirs = {}
 
         for directory in fp.iterdir():
             if not directory.is_file():
-                if self.is_snippet_dir(directory):
+                if self._is_snippet_dir(directory):
                     snippet_dirs[directory.name] = directory
 
         snippets_map = {}
@@ -90,14 +90,14 @@ class PathBuilder:
             if (meta_file.exists() and meta_file.is_file()):
                 with meta_file.open() as mf:
                     metadata = oyaml.safe_load(mf.read())
-                    snippets = self.snippets_from_metafile(meta_file)
+                    snippets = self._snippets_from_metafile(meta_file)
                     if len(snippets) > 0:
                         ss = SnippetStack(snippets, metadata)
                         snippets_map[dir_name] = ss
 
         return snippets_map
 
-    def snippets_from_metafile(self, meta_file : Path):
+    def _snippets_from_metafile(self, meta_file : Path):
         rel_dir = meta_file.parent
         with meta_file.open() as meta_openfile:
             metadata = oyaml.safe_load(meta_openfile.read())
@@ -108,7 +108,7 @@ class PathBuilder:
 
             for snippet_def in metadata["snippets"]:
                 # This validates the snippet metadata contains all the required information
-                if self.validate_snippet_meta(snippet_def, rel_dir):
+                if self._validate_snippet_meta(snippet_def, rel_dir):
                     snippet_file = rel_dir / snippet_def["file"]
                     snippet_xpath = snippet_def["xpath"]
                     with snippet_file.open() as snippet_openfile:
@@ -119,7 +119,7 @@ class PathBuilder:
 
         return snippets
 
-    def validate_snippet_meta(self, snippet_def, rel_dir):
+    def _validate_snippet_meta(self, snippet_def, rel_dir):
         snippet_fields = ["file", "xpath"]
         # Validate all the required fields are there
         for sf in snippet_fields:
@@ -133,7 +133,7 @@ class PathBuilder:
 
         return True
 
-    def is_snippet_dir(self, fp):
+    def _is_snippet_dir(self, fp):
         """
         Check if the directory at fp is a snippet directory
         """
